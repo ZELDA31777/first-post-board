@@ -122,16 +122,21 @@ com.board.first
 ```
 #### 해결 방안 : 메서드 추출
 ```java
-    private static Integer getPostIndexFromUser() {
-        String input = scanner.nextLine();
-        String numberStr = input.replaceAll("\\D", "");
-        int number = Integer.parseInt(numberStr);
-        if (number < 1 || number > posts.size()){
-            System.out.printf("\n%d번 게시물은 존재하지 않습니다.\n", number);
-            return null;
-        }
-        return number - 1;
+private static Integer getPostIndexFromUser() {
+    String input = scanner.nextLine();
+    String numberStr = input.replaceAll("\\D", "");
+    // NumberFormatException을 처리하기 위함
+    if(numberStr.isEmpty()){
+        System.out.println("숫자를 입력해주세요.");
+        return null;
     }
+    int number = Integer.parseInt(numberStr);
+    if (number < 1 || number > posts.size()){
+        System.out.printf("\n%d번 게시물은 존재하지 않습니다.\n", number);
+        return null;
+    }
+    return number - 1;
+}
 ```
 #### 개선 효과
 - 중복된 코드 제거
