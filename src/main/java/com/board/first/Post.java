@@ -6,15 +6,17 @@ public class Post {
     private int postId;
     private String postTitle;
     private String postContent;
+    private int boardId;
     private String postAuthor;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     
     // 게시글 작성시
-    public Post(int postId, String postTitle, String postContent) {
+    public Post(int postId, String postTitle, String postContent, int boardId) {
         this.postId = postId;
         this.postTitle = postTitle;
         this.postContent = postContent;
+        this.boardId = boardId;
         this.createTime = LocalDateTime.now();
         this.updateTime = this.createTime;
     }
@@ -41,6 +43,14 @@ public class Post {
 
     public void setPostContent(String postContent) {
         this.postContent = postContent;
+    }
+
+    public int getBoardId() {
+        return boardId;
+    }
+
+    public void setBoardId(int boardId) {
+        this.boardId = boardId;
     }
 
     public String getPostAuthor() {
@@ -73,6 +83,7 @@ public class Post {
                 "postId=" + postId +
                 ", postTitle='" + postTitle + '\'' +
                 ", postContent='" + postContent + '\'' +
+                ", boardId='" + boardId + '\'' +
                 ", postAuthor='" + postAuthor + '\'' +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
