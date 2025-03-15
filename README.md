@@ -6,7 +6,9 @@
 ## 현재 버전
 [![Latest Commit](https://img.shields.io/badge/dynamic/json?color=blue&label=Live%20Commit%20ID&query=%24.sha&url=https%3A%2F%2Fapi.github.com%2Frepos%2FZELDA31777%2Ffirst-post-board%2Fcommits%2Fmain)](https://github.com/ZELDA31777/first-post-board/commit/main)
 [![Last Commit](https://img.shields.io/github/last-commit/ZELDA31777/first-post-board?style=flat&logo=github)](https://github.com/ZELDA31777/first-post-board/commits/main)<br>
-상기의 Commit은 1단계에 해당합니다.
+상기의 Commit은 2단계에 해당합니다. <br>
+2단계의 경우, 현재 `회원 기능[4번]`부터 이후의 구현이 필요합니다. <br>
+2단계의 전체 구현 및 README의 갱신은 2025.03.16 완료 예정입니다.
 
 <br>
 사족 : 거의 처음으로 `README.md`파일을 작성함에 있어서, <br>
@@ -45,7 +47,7 @@ com.board.first.Main 클래스를 실행합니다.
 #### 게시글 조회 예시
 ```text
 명령어 > 조회
-어떤 게시물을 조회할까요? 2
+어떤 게시물을 조회할까요? 2번
 
 제목: 두 번째 게시물
 내용: 두 번째 게시물입니다.
@@ -53,7 +55,7 @@ com.board.first.Main 클래스를 실행합니다.
 #### 게시글 수정 예시
 ```text
 명령어 > 수정
-어떤 게시물을 수정할까요? 1
+어떤 게시물을 수정할까요? 1번
 
 1번 게시물을 수정합니다.
 제목: [수정] 첫 번째 게시물
@@ -63,7 +65,7 @@ com.board.first.Main 클래스를 실행합니다.
 #### 게시글 삭제
 ```text
 명령어 > 삭제
-어떤 게시물을 삭제할까요? 3
+어떤 게시물을 삭제할까요? 3번
 
 3번 게시물이 성공적으로 삭제되었습니다.
 ```
