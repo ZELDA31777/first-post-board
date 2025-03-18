@@ -1,23 +1,29 @@
 package com.board.first;
 
 import com.board.first.exception.*;
+import com.board.first.exception.account.AccountStatusException;
+import com.board.first.exception.account.AccountValidationException;
+import com.board.first.exception.account.InvalidAccountIdException;
 import com.board.first.exception.board.*;
 import com.board.first.exception.command.CommandValidationException;
 import com.board.first.exception.command.InvalidCommandException;
+import com.board.first.exception.post.PostValidationException;
+import com.board.first.service.AccountServiceImpl;
+import com.board.first.service.BoardServiceImpl;
+import com.board.first.service.PostServiceImpl;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 public class Main {
-    private static final List<Post> posts = new ArrayList<>();
-    private static final List<Board> boards = new ArrayList<>();
-    private static int postId = 1;
-    private static int boardId = 1;
+    private static Account currentLoginAccount = null;
     private static final Scanner scanner = new Scanner(System.in);
+    private static final AccountServiceImpl accountService = new AccountServiceImpl();
+    private static final BoardServiceImpl boardService = new BoardServiceImpl();
+    private static final PostServiceImpl postService = new PostServiceImpl();
 
     public static void main(String[] args) {
-        try {
-            while (true) {
+        while (true) {
+            try {
                 System.out.print("a");
                 String input = scanner.nextLine().trim();
 
@@ -26,33 +32,36 @@ public class Main {
                     return;
                 }
 
-                if (input.isEmpty() || input.charAt(0) != '/') {
-                    throw new CommandValidationException("잘못된 URL이 입력되었습니다.");
+                if (!input.startsWith("/")) {
+                    throw new CommandValidationException("URL은 '/'로 시작해야 합니다");
                 }
 
-                String[] urls = input.split("/", 3);
-                String category = urls[1];
-                String[] str = urls[2].split("\\?", 2);
-                String function = str[0];
+                // 2. 경로(Path)와 쿼리(Query) 분리
+                String[] urlParts = input.split("\\?", 2);
+                String pathSection = urlParts[0];
+                String querySection = urlParts.length > 1 ? urlParts[1] : "";
 
-                // Key값의 중복이 허용되지 않는 Map을 이용.
+                // 3. 경로 파싱 (최소 2계층)
+                String[] pathSegments = pathSection.substring(1).split("/");
+                if (pathSegments.length < 2) {
+                    throw new CommandValidationException(
+                            "[오류] URL 형식: /카테고리/기능?파라미터"
+                    );
+                }
+                String category = pathSegments[0];
+                String function = pathSegments[1];
+
                 Map<String, String> paramMap = new HashMap<>();
-                if (str.length >= 2 && !str[1].isEmpty()) {
-                    if (str[1].contains("&")) {
-                        String[] params = str[1].split("&");
-                        for (String param : params) {
-                            String[] keyValue = param.split("=", 2);
-                            if (keyValue.length == 2) {
-                                paramMap.put(keyValue[0], keyValue[1]);
-                            }
-                        }
-                    } else {
-                        String[] keyValue = str[1].split("=", 2);
-                        if (keyValue.length == 2) {
-                            paramMap.put(keyValue[0], keyValue[1]);
-                        }
+                if (!querySection.isEmpty()) {
+                    String[] params = querySection.split("&");
+                    for (String param : params) {
+                        String[] keyValue = param.split("=", 2);
+                        String key = keyValue[0].trim();
+                        String value = keyValue.length > 1 ? keyValue[1].trim() : "";
+                        paramMap.put(key, value);
                     }
                 }
+
                 switch (category) {
                     case "boards":
                         boardsFunctions(function, paramMap);
@@ -60,219 +69,175 @@ public class Main {
                     case "posts":
                         postsFunctions(function, paramMap);
                         break;
+                    case "accounts":
+                        accountsFunctions(function, paramMap);
                 }
+            } catch (BoardAppException e) {
+                System.out.println(e.getMessage());
             }
-        } catch (BoardAppException e) {
+        }
+    }
+
+    // TODO :
+    private static void accountsFunctions(String function, Map<String, String> paramMap) {
+        try {
+            switch (function) {
+                case "signup":
+                    createAccount();
+                    break;
+                case "signin":
+                    loginAccount();
+                    break;
+                case "signout":
+                    logoutAccount();
+                    break;
+                case "detail":
+                    requireParam(paramMap, "accountId");
+                    displayAccount(paramMap);
+                    break;
+                case "edit":
+                    requireParam(paramMap, "accountId");
+                    editAccount(paramMap);
+                    break;
+                case "remove":
+                    requireParam(paramMap, "accountId");
+                    deleteAccount(paramMap);
+                    break;
+                default:
+                    throw new InvalidCommandException(function);
+            }
+        } catch (AccountValidationException e) {
             System.out.println(e.getMessage());
         }
     }
+
     private static void postsFunctions(String function, Map<String, String> paramMap){
-        switch (function) {
-            case "add":
-                insertPost(paramMap);
-                break;
-            case "view":
-                displayPostByPostId(paramMap);
-                break;
-            case "remove":
-                deletePostByPostId(paramMap);
-                break;
-            case "edit":
-                updatePostByPostId(paramMap);
-                break;
-            default:
-                throw new InvalidCommandException(function);
+        try {
+            switch (function) {
+                case "add":
+                    requireParam(paramMap, "boardId");
+                    insertPost(paramMap);
+                    break;
+                case "view":
+                    requireParam(paramMap, "postId");
+                    displayPostByPostId(paramMap);
+                    break;
+                case "remove":
+                    requireParam(paramMap, "postId");
+                    deletePostByPostId(paramMap);
+                    break;
+                case "edit":
+                    requireParam(paramMap, "postId");
+                    updatePostByPostId(paramMap);
+                    break;
+                default:
+                    throw new InvalidCommandException(function);
+            }
+        } catch (PostValidationException | AccountValidationException | BoardValidationException e) {
+            System.out.println(e.getMessage());
         }
     }
 
     private static void boardsFunctions(String function, Map<String, String> paramMap){
-        switch (function) {
-            case "add":
-                insertBoard();
-                break;
-            case "edit":
-                updateBoardByBoardId(paramMap);
-                break;
-            case "remove":
-                deleteBoardByBoardId(paramMap);
-                break;
-            case "view":
-                displayPostsByBoardName(paramMap);
-                break;
-            default:
-                throw new InvalidCommandException(function);
-        }
-    }
-
-
-
-    // 게시글 작성
-    private static void insertPost(Map<String, String> paramMap) {
         try {
-            if (!paramMap.containsKey("boardId")) {
-                throw new BoardValidationException("boardId 파라미터를 입력해주세요.");
-            }
-            String boardIdString = paramMap.get("boardId");
-            int boardId;
-            try {
-                boardId = Integer.parseInt(boardIdString);
-            } catch (NumberFormatException e){
-                throw new InvalidBoardIdException(boardIdString, e);
-            }
-            boolean boardExistFlag = false;
-            for (Board board : boards) {
-                if (board.getBoardId() == boardId) {
-                    boardExistFlag = true;
+            switch (function) {
+                case "add":
+                    insertBoard();
                     break;
-                }
+                case "edit":
+                    requireParam(paramMap, "boardId");
+                    updateBoardByBoardId(paramMap);
+                    break;
+                case "remove":
+                    requireParam(paramMap, "boardId");
+                    deleteBoardByBoardId(paramMap);
+                    break;
+                case "view":
+                    requireParam(paramMap, "boardId");
+                    displayPostsByBoardName(paramMap);
+                    break;
+                default:
+                    throw new InvalidCommandException(function);
             }
-            if (!boardExistFlag) {
-                throw new BoardNotFoundException(boardId);
-            }
-            System.out.print("제목: ");
-            String title = scanner.nextLine();
-            System.out.print("내용: ");
-            String content = scanner.nextLine();
-            Post post = new Post(postId++, title, content, boardId);
-            posts.add(post);
-            System.out.println("게시글이 작성되었습니다.");
-        } catch (BoardValidationException e) {
+        } catch (BoardValidationException | AccountValidationException e) {
             System.out.println(e.getMessage());
         }
     }
 
+    private static void requireParam(Map<String, String> paramMap, String paramName) {
+        if (!paramMap.containsKey(paramName)) {
+            throw new CommandValidationException(paramName + " 파라미터를 입력해주세요.");
+        }
+    }
+
+    // 게시글 작성
+    // TODO : 게시글 작성 서비스로 분리 완료. (BoardService 관련 고민 중)
+    private static void insertPost(Map<String, String> paramMap) throws BoardValidationException {
+        if (!paramMap.containsKey("boardId")) {
+            throw new BoardValidationException("boardId 파라미터를 입력해주세요.");
+        }
+        String boardIdString = paramMap.get("boardId");
+        int boardId;
+        try {
+            boardId = Integer.parseInt(boardIdString);
+        } catch (NumberFormatException e){
+            throw new InvalidBoardIdException(boardIdString, e);
+        }
+        try {
+            boardService.getBoardByBoardId(boardId);
+        } catch (BoardNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.print("제목: ");
+        String postName = scanner.nextLine();
+        System.out.print("내용: ");
+        String postContent = scanner.nextLine();
+        postService.createPost(boardId, postName, currentLoginAccount, postContent);
+        System.out.println("게시글이 작성되었습니다.");
+    }
+
     // 게시글 목록
+    // TODO : 게시글 목록 서비스로 분리 완료.
     private static void displayPostsByBoardName(Map<String, String> paramMap) {
         try {
-            if (posts.isEmpty()) {
-                System.out.println("등록된 게시글이 없습니다.");
-                return;
-            }
-            if (!paramMap.containsKey("boardName")) {
-                throw new BoardValidationException("boardId 파라미터를 입력해주세요.");
-            }
             String boardName = paramMap.get("boardName");
-            int boardId = 0;
-            boolean boardExistFlag = false;
-            for (Board board : boards) {
-                if (board.getBoardName().equals(boardName)) {
-                    boardId = board.getBoardId();
-                    boardExistFlag = true;
-                    break;
-                }
-            }
-            if (!boardExistFlag) {
-                throw new BoardNotFoundException(boardName);
-            }
+            int boardId = boardService.getBoardIdByBoardName(boardName);
             System.out.println("글 번호\t/\t글 제목\t/\t작성일");
-            for (Post post : posts) {
-                if (post.getBoardId() == boardId) {
-                    System.out.println(post.getPostId() + "\t/\t" + post.getPostTitle() + "\t/\t" + post.getCreateTime());
-                }
-            }
+            List<Post> posts = postService.getPostListByBoardId(boardId);
         } catch (BoardValidationException e){
             System.out.println(e.getMessage());
         }
     }
 
-    // 게시물 수정 (index)
-    @Deprecated
-    private static void updatePostByIndex() {
-        System.out.print("어떤 게시물을 수정할까요?");
-        Integer indexingNumber = getPostIndexFromUser();
-        if (indexingNumber == null) return;
-
-        Post updatedPost = posts.get(indexingNumber);
-        System.out.printf("%d번 게시물을 수정합니다.\n", indexingNumber + 1);
-        System.out.print("제목: ");
-        String title = scanner.nextLine();
-        updatedPost.setPostTitle(title);
-        System.out.print("내용: ");
-        String content = scanner.nextLine();
-        updatedPost.setPostContent(content);
-        updatedPost.setUpdateTime(LocalDateTime.now());
-        System.out.printf("%d번 게시물이 성공적으로 수정되었습니다!\n", indexingNumber + 1);
-    }
-
     // 게시글 수정 (postId)
+    // TODO : 게시글 수정 서비스로 분리 완료.
     private static void updatePostByPostId(Map<String, String>paramMap) {
         try {
-            if (posts.isEmpty()) {
-                System.out.println("등록된 게시글이 없습니다.");
-                return;
-            }
             if (!paramMap.containsKey("postId")) {
                 throw new PostValidationException("postId 파라미터를 입력해주세요.");
             }
             String postIdString = paramMap.get("postId");
             int postId;
             try {
-                postId = Integer.parseInt(paramMap.get("postId"));
+                postId = Integer.parseInt(postIdString);
             } catch (NumberFormatException e) {
-                throw new InvalidPostIdException(paramMap.get("postId"));
+                throw new InvalidPostIdException(postIdString);
             }
-
-            boolean postUpdatedFlag = false;
-            for (Post post : posts) {
-                if (post.getPostId() == postId){
-
-                    System.out.print("제목: ");
-                    String postTitle = scanner.nextLine();
-                    System.out.print("내용: ");
-                    String postContent = scanner.nextLine();
-
-                    post.setPostTitle(postTitle);
-                    post.setPostContent(postContent);
-                    post.setUpdateTime(LocalDateTime.now());
-                    postUpdatedFlag = true;
-                    break;
-                }
-            }
-            if (!postUpdatedFlag) {
-                throw new PostNotFoundException(postId);
-            }
+            System.out.print("제목: ");
+            String postName = scanner.nextLine();
+            System.out.print("내용: ");
+            String postContent = scanner.nextLine();
+            postService.updatePost(postId, currentLoginAccount, postName, postContent);
             System.out.printf("%d번 게시물이 성공적으로 수정되었습니다!\n", postId);
         } catch (PostValidationException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    // 게시물 조회 (index)
-    @Deprecated
-    private static void displayPostByIndex() {
-        System.out.print("어떤 게시물을 조회할까요?");
-        Integer indexingNumber = getPostIndexFromUser();
-        if (indexingNumber == null) return;
-        System.out.printf("\n%d번 게시물\n", indexingNumber + 1);
-
-        System.out.println("제목: " + posts.get(indexingNumber).getPostTitle());
-        System.out.println("내용: " + posts.get(indexingNumber).getPostContent());
-    }
-
-    // 게시물 삭제 (index)
-    @Deprecated
-    private static void deletePostByIndex() {
-        if (posts.isEmpty()){
-            System.out.println("등록된 게시글이 없습니다.");
-            return;
-        }
-        System.out.print("어떤 게시물을 삭제할까요?");
-        Integer indexingNumber = getPostIndexFromUser();
-        if (indexingNumber == null) return;
-        posts.remove((int)indexingNumber);
-        System.out.printf("%d번 게시물이 성공적으로 삭제되었습니다.\n", indexingNumber + 1);
-    }
-
     // 게시물 삭제 (postId)
+    // TODO : 게시글 삭제 서비스 분리 중.
     private static void deletePostByPostId(Map<String, String> paramMap) {
         try {
-            if (posts.isEmpty()){
-                System.out.println("등록된 게시글이 없습니다.");
-                return;
-            }
-            if (!paramMap.containsKey("postId")){
-                throw new PostValidationException("postId 파라미터를 입력해주세요.");
-            }
             String postIdString = paramMap.get("postId");
             int postId;
             try {
@@ -280,55 +245,17 @@ public class Main {
             } catch (NumberFormatException e){
                 throw new InvalidPostIdException(postIdString, e);
             }
-            boolean postDeletedFlag = false;
-            for (Post post : posts){
-                if (post.getPostId() == postId){
-                    posts.remove(post);
-                    postDeletedFlag = true;
-                    break;
-                }
-            }
-            if (!postDeletedFlag){
-                throw new PostNotFoundException(postId);
-            }
+            postService.deletePostByPostId(postId, currentLoginAccount);
             System.out.printf("%d번 게시물이 성공적으로 삭제되었습니다.\n", postId);
-        } catch (PostValidationException e) {
+        } catch (PostValidationException | AccountValidationException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    @Deprecated
-    private static Integer getPostIndexFromUser() {
-        String input = scanner.nextLine();
-        String numberStr = input.replaceAll("\\D", "");
-        // NumberFormatException을 처리하기 위함
-        if(numberStr.isEmpty()){
-            System.out.println("숫자를 입력해주세요.");
-            return null;
-        }
-        int number = Integer.parseInt(numberStr);
-        if (number < 1 || number > posts.size()){
-            System.out.printf("\n%d번 게시물은 존재하지 않습니다.\n", number);
-            return null;
-        }
-        return number - 1;
-    }
-
-    // postId로 조회하는 것이 아니라 'n번째 게시글'을 조회하는 인식.
-    private static Post getPostByIndex(int number) {
-        return posts.get(number);
-    }
-
-    // 추후에 PostId로 조회하는 작업이 필요할 수 있기에 미리 작성해둠.
+    // 게시글 출력
+    // TODO : 게시판 출력 서비스 분리 완료.
     private static void displayPostByPostId(Map<String, String> paramMap){
         try {
-            if (posts.isEmpty()){
-                System.out.println("등록된 게시글이 없습니다.");
-                return;
-            }
-            if (!paramMap.containsKey("postId")){
-                throw new PostValidationException("postId 파라미터를 입력해주세요.");
-            }
             String postIdString = paramMap.get("postId");
             int postId;
             try {
@@ -336,43 +263,30 @@ public class Main {
             } catch (NumberFormatException e) {
                 throw new InvalidPostIdException(postIdString, e);
             }
-            boolean postDisplayedFlag = false;
-            for(Post post : posts){
-                if(post.getPostId() == postId){
-                    System.out.printf("\n%d번 게시물\n", postId);
-                    System.out.println("작성일 : " + post.getCreateTime());
-                    System.out.println("수정일 : " + post.getUpdateTime());
-                    System.out.println("제목 : " + post.getPostTitle());
-                    System.out.println("내용 : " + post.getPostContent());
-                    postDisplayedFlag = true;
-                    break;
-                }
-            }
-            if (!postDisplayedFlag){
-                throw new PostNotFoundException(postId);
-            }
+            Post post = postService.getPostByPostId(postId);
+            System.out.printf("\n%d번 게시물\n", postId);
+            System.out.println("작성일 : " + post.getCreateTime());
+            System.out.println("수정일 : " + post.getUpdateTime());
+            System.out.println("제목 : " + post.getPostTitle());
+            System.out.println("내용 : " + post.getPostContent());
         } catch (PostValidationException e) {
             System.out.println(e.getMessage());
         }
     }
 
     // 게시판 작성
+    // TODO : 게시판 작성 서비스 분리 완료.
     private static void insertBoard() {
         System.out.print("게시판 제목: ");
-        // 앞뒤 공백 제거.
         String boardName = scanner.nextLine().trim();
-        Board board = new Board(boardId++, boardName);
-        boards.add(board);
+        boardService.createBoard(boardName, currentLoginAccount);
         System.out.println("게시판이 작성되었습니다.");
     }
 
     // 게시판 수정 (boardId)
-    private static void updateBoardByBoardId(Map<String, String> paramMap) {
+    // TODO : 게시판 수정 서비스 분리 완료.
+    private static void updateBoardByBoardId(Map<String, String> paramMap) throws BoardValidationException, AccountValidationException {
         try {
-            if(!paramMap.containsKey("boardId")){
-                // Business Logic내에서 완결되는 예외이기에 cause를 포함하지 않음.
-                throw new BoardValidationException("boardId 파라미터를 입력해주세요.");
-            }
             String boardIdString = paramMap.get("boardId");
             int boardId;
             try {
@@ -381,53 +295,112 @@ public class Main {
                 // RuntimeException의 하위 예외를 포함하고 있기 때문에, cause를 포함.
                 throw new InvalidBoardIdException(boardIdString, e);
             }
-            boolean boardUpdatedFlag = false;
-            for(Board board : boards) {
-                if (board.getBoardId() == boardId) {
-                    System.out.print("게시판 제목: ");
-                    String title = scanner.nextLine();
-                    board.setBoardName(title);
-                    board.setUpdateTime(LocalDateTime.now());
-                    boardUpdatedFlag = true;
-                    break;
-                }
+            System.out.print("게시판 제목: ");
+            String boardName = scanner.nextLine();
+            if (boardName.isEmpty()) {
+                throw new BoardValidationException("게시판 제목을 입력해주세요.");
             }
-            if(!boardUpdatedFlag){
-                throw new BoardNotFoundException(boardId);
-            }
+            boardService.updateBoard(boardId, boardName, currentLoginAccount);
             System.out.printf("%d번 게시판이 성공적으로 수정되었습니다!\n", boardId);
-        } catch (BoardValidationException e) {
+        } catch (BoardValidationException | AccountValidationException e) {
             System.out.println(e.getMessage());
         }
     }
 
     // 게시판 삭제 (boardId)
-    private static void deleteBoardByBoardId(Map<String, String> paramMap) {
+    // TODO : 게시판 삭제 서비스 분리 완료.
+    private static void deleteBoardByBoardId(Map<String, String> paramMap) throws BoardValidationException, AccountValidationException {
+        String boardIdString = paramMap.get("boardId");
+        int boardId;
         try {
-            if(!paramMap.containsKey("boardId")){
-                throw new BoardValidationException("boardId 파라미터를 입력해주세요.");
-            }
-            String boardIdString = paramMap.get("boardId");
-            int boardId;
-            try {
-                boardId = Integer.parseInt(boardIdString);
-            } catch (NumberFormatException e){
-                throw new InvalidBoardIdException(boardIdString, e);
-            }
-            boolean boardDeletedFlag = false;
-            for (Board board : boards){
-                if (board.getBoardId() == boardId){
-                    boards.remove(board);
-                    boardDeletedFlag = true;
-                    break;
-                }
-            }
-            if(!boardDeletedFlag){
-                throw new BoardNotFoundException(boardId);
-            }
-            System.out.printf("%d번 게시판이 성공적으로 삭제되었습니다!\n", boardId);
-        } catch (BoardValidationException e){
-            System.out.println(e.getMessage());
+            boardId = Integer.parseInt(boardIdString);
+        } catch (NumberFormatException e){
+            throw new InvalidBoardIdException(boardIdString, e);
         }
+        boardService.deleteBoard(boardId, currentLoginAccount);
+        System.out.printf("%d번 게시판이 성공적으로 삭제되었습니다!\n", boardId);
     }
+
+    // TODO : 회원 가입 완료
+    private static void createAccount() {
+            System.out.print("계정: ");
+            String userId = scanner.nextLine().trim();
+            System.out.print("비밀번호: ");
+            String password = scanner.nextLine().trim();
+            System.out.print("닉네임: ");
+            String username = scanner.nextLine().trim();
+            System.out.print("이메일: ");
+            String email = scanner.nextLine().trim();
+            // 내부 로직을 서비스로 분리
+            accountService.signUpAccount(userId, password, username, email);
+            System.out.println("회원 가입이 성공적으로 완료되었습니다.");
+    }
+
+    // TODO : 로그인 완료
+    private static void loginAccount() {
+        if (currentLoginAccount != null) {
+            throw new AccountStatusException("다른 아이디로 로그인 시에는 로그아웃 후에 로그인 해주세요.");
+        }
+        System.out.print("계정: ");
+        String userId = scanner.nextLine().trim();
+        System.out.print("비밀번호: ");
+        String password = scanner.nextLine().trim();
+        // 내부 로직을 서비스로 분리
+        currentLoginAccount = accountService.signInAccount(userId, password);
+        System.out.printf("%s의 로그인에 성공하였습니다!\n", currentLoginAccount.getUsername());
+    }
+
+    // TODO : 로그아웃 완료.
+    private static void logoutAccount() {
+        accountService.logoutAccount(currentLoginAccount);
+    }
+
+    // TODO : 계정 표시
+    private static void displayAccount(Map<String, String> paramMap) throws AccountValidationException {
+        String accountIdString = paramMap.get("accountId");
+        int accountId;
+        try {
+            accountId = Integer.parseInt(accountIdString);
+        } catch (NumberFormatException e) {
+            throw new InvalidAccountIdException(accountIdString);
+        }
+        Account account = accountService.getAccountByAccountId(accountId);
+        System.out.printf("%d번 회원\n", accountId);
+        System.out.println("계정 : " + account.getUsername());
+        System.out.println("이메일 : " + account.getEmail());
+        System.out.println("가입일 : " + account.getCreateTime());
+    }
+
+    // TODO : 계정 수정
+    private static void editAccount(Map<String, String> paramMap) throws AccountValidationException {
+        String accountIdString = paramMap.get("accountId");
+        int accountId;
+        try {
+            accountId = Integer.parseInt(accountIdString);
+        } catch (NumberFormatException e) {
+            throw new InvalidAccountIdException(accountIdString);
+        }
+        System.out.print("비밀번호: ");
+        String password = scanner.nextLine().trim();
+        System.out.print("이메일: ");
+        String email = scanner.nextLine().trim();
+        accountService.updateAccount(accountId, password, email, currentLoginAccount);
+    }
+
+    // TODO : 계정 삭제
+    private static void deleteAccount(Map<String, String> paramMap) throws AccountValidationException {
+        String accountIdString = paramMap.get("accountId");
+        int accountId;
+        try {
+            accountId = Integer.parseInt(accountIdString);
+        } catch (NumberFormatException e) {
+            throw new InvalidAccountIdException(accountIdString);
+        }
+        if (currentLoginAccount != null) {
+            accountService.logoutAccount(currentLoginAccount);
+        }
+        String username = accountService.deleteAccount(accountId);
+        System.out.printf("%s의 회원 탈퇴에 성공하였습니다!\n", username);
+    }
+
 }

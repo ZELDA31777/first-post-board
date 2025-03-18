@@ -4,19 +4,25 @@ import java.time.LocalDateTime;
 
 public class Post {
     private int postId;
+    private int boardId;
+    private Account account;
     private String postTitle;
     private String postContent;
-    private int boardId;
-    private String postAuthor;
+    private String authorName;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-    
+
+    public Post() {
+    }
+
     // 게시글 작성시
-    public Post(int postId, String postTitle, String postContent, int boardId) {
+    public Post(int postId, int boardId, Account account, String postTitle, String postContent) {
         this.postId = postId;
+        this.boardId = boardId;
+        this.account = account;
         this.postTitle = postTitle;
         this.postContent = postContent;
-        this.boardId = boardId;
+        this.authorName = account != null ? account.getUsername() : "비회원";
         this.createTime = LocalDateTime.now();
         this.updateTime = this.createTime;
     }
@@ -25,8 +31,12 @@ public class Post {
         return postId;
     }
 
-    public void setPostId(int postId) {
-        this.postId = postId;
+    public int getBoardId() {
+        return boardId;
+    }
+
+    public Account getAccount() {
+        return account;
     }
 
     public String getPostTitle() {
@@ -45,28 +55,12 @@ public class Post {
         this.postContent = postContent;
     }
 
-    public int getBoardId() {
-        return boardId;
-    }
-
-    public void setBoardId(int boardId) {
-        this.boardId = boardId;
-    }
-
-    public String getPostAuthor() {
-        return postAuthor;
-    }
-
-    public void setPostAuthor(String postAuthor) {
-        this.postAuthor = postAuthor;
+    public String getAuthorName() {
+        return authorName;
     }
 
     public LocalDateTime getCreateTime() {
         return createTime;
-    }
-
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
     }
 
     public LocalDateTime getUpdateTime() {
@@ -84,7 +78,7 @@ public class Post {
                 ", postTitle='" + postTitle + '\'' +
                 ", postContent='" + postContent + '\'' +
                 ", boardId='" + boardId + '\'' +
-                ", postAuthor='" + postAuthor + '\'' +
+                ", postAuthor='" + account.getUsername() + '\'' +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 '}';

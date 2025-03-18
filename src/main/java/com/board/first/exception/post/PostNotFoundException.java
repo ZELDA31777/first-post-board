@@ -1,4 +1,4 @@
-package com.board.first.exception.board;
+package com.board.first.exception.post;
 
 public class PostNotFoundException extends PostValidationException {
     public PostNotFoundException(int postId) {

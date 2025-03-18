@@ -1,6 +1,8 @@
-package com.board.first.exception.board;
+package com.board.first.exception.post;
 
-public class PostValidationException extends BoardValidationException {
+import com.board.first.exception.BoardAppException;
+
+public class PostValidationException extends BoardAppException {
     public PostValidationException(String message){
         super(message);
     }
