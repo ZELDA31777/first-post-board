@@ -153,7 +153,7 @@ public class Main {
                     deleteBoardByBoardId(paramMap);
                     break;
                 case "view":
-                    requireParam(paramMap, "boardId");
+                    requireParam(paramMap, "boardName");
                     displayPostsByBoardName(paramMap);
                     break;
                 default:
@@ -253,7 +253,6 @@ public class Main {
     }
 
     // 게시글 출력
-    // TODO : 게시판 출력 서비스 분리 완료.
     private static void displayPostByPostId(Map<String, String> paramMap){
         try {
             String postIdString = paramMap.get("postId");

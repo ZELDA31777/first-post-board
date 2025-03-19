@@ -37,7 +37,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public void updatePost(int postId, Account account, String postName, String postContent) throws PostNotFoundException , AccountStatusException {
         Post post = getPostByPostId(postId);
-        if (!post.getAccount().equals(account)) {
+        if (account == null || !post.getAccount().equals(account)) {
             throw new AccountValidationException("작성한 계정으로 로그인 해주세요.");
         }
         validateAccountFields(postName, postContent);
@@ -49,7 +49,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public void deletePostByPostId(int postId, Account account) throws PostNotFoundException, AccountStatusException {
         Post post = getPostByPostId(postId);
-        if (!post.getAccount().equals(account)) {
+        if (account == null || !post.getAccount().equals(account)) {
             throw new AccountStatusException("작성한 계정으로 로그인 해주세요.");
         }
         posts.remove(post);
