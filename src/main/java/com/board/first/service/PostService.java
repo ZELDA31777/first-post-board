@@ -13,4 +13,5 @@ public interface PostService {
     Post getPostByPostId (int postId) throws PostNotFoundException;
     void deletePostByPostId (int postId, Account account) throws PostNotFoundException;
     List<Post> getPostListByBoardId(int boardId) throws BoardNotFoundException;
+    void deletePostListByBoardId(int boardId);
 }

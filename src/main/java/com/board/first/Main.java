@@ -8,9 +8,7 @@ import com.board.first.exception.board.*;
 import com.board.first.exception.command.CommandValidationException;
 import com.board.first.exception.command.InvalidCommandException;
 import com.board.first.exception.post.PostValidationException;
-import com.board.first.service.AccountServiceImpl;
-import com.board.first.service.BoardServiceImpl;
-import com.board.first.service.PostServiceImpl;
+import com.board.first.service.*;
 
 import java.util.*;
 
@@ -18,8 +16,9 @@ public class Main {
     private static Account currentLoginAccount = null;
     private static final Scanner scanner = new Scanner(System.in);
     private static final AccountServiceImpl accountService = new AccountServiceImpl();
-    private static final BoardServiceImpl boardService = new BoardServiceImpl();
-    private static final PostServiceImpl postService = new PostServiceImpl();
+    // 다형성과 업캐스팅 -> 정말 기초적인 부분. 이걸 햇갈리다니 정말 창피하다.
+    private static final PostService postService = new PostServiceImpl();
+    private static final BoardService boardService = new BoardServiceImpl(postService);
 
     public static void main(String[] args) {
         while (true) {
@@ -44,9 +43,7 @@ public class Main {
                 // 3. 경로 파싱 (최소 2계층)
                 String[] pathSegments = pathSection.substring(1).split("/");
                 if (pathSegments.length < 2) {
-                    throw new CommandValidationException(
-                            "[오류] URL 형식: /카테고리/기능?파라미터"
-                    );
+                    throw new CommandValidationException("URL은 최소한 '/카테고리/기능'의 형태를 갖춰야 합니다.");
                 }
                 String category = pathSegments[0];
                 String function = pathSegments[1];
@@ -171,7 +168,6 @@ public class Main {
     }
 
     // 게시글 작성
-    // TODO : 게시글 작성 서비스로 분리 완료. (BoardService 관련 고민 중)
     private static void insertPost(Map<String, String> paramMap) throws BoardValidationException {
         if (!paramMap.containsKey("boardId")) {
             throw new BoardValidationException("boardId 파라미터를 입력해주세요.");
@@ -186,7 +182,7 @@ public class Main {
         try {
             boardService.getBoardByBoardId(boardId);
         } catch (BoardNotFoundException e) {
-            System.out.println(e.getMessage());
+            throw new BoardNotFoundException(boardId);
         }
         System.out.print("제목: ");
         String postName = scanner.nextLine();

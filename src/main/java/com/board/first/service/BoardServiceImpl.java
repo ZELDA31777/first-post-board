@@ -14,7 +14,11 @@ import java.util.List;
 public class BoardServiceImpl implements BoardService {
     private final List<Board> boards = new ArrayList<>();
     private int boardId = 1;
+    private final PostService postService;
 
+    public BoardServiceImpl(PostService postService) {
+        this.postService = postService;
+    }
 
     @Override
     public void createBoard(String boardName, Account account) {
@@ -37,7 +41,7 @@ public class BoardServiceImpl implements BoardService {
     public void updateBoard(int boardId, String boardName, Account account) throws BoardNotFoundException, AccountStatusException {
         Board board = getBoardByBoardId(boardId);
         // short-circuit으로 처리하였습니다.
-        if (board.getAccount() == null || !board.getAccount().equals(account)) {
+        if (account == null || !board.getAccount().equals(account)) {
             throw new AccountStatusException("작성한 계정으로 로그인 해주세요");
         }
         validateAccountFields(boardName);
@@ -49,9 +53,10 @@ public class BoardServiceImpl implements BoardService {
     public void deleteBoard(int boardId, Account account) throws BoardNotFoundException, AccountStatusException {
         Board board = getBoardByBoardId(boardId);
         // short-circuit으로 처리하였습니다.
-        if (board.getAccount() == null || !board.getAccount().equals(account)) {
+        if (account == null || !board.getAccount().equals(account)) {
             throw new AccountStatusException("작성한 계정으로 로그인 해주세요.");
         }
+        postService.deletePostListByBoardId(boardId);
         boards.remove(board);
     }
 

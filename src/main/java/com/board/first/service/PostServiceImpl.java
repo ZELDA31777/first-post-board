@@ -70,6 +70,12 @@ public class PostServiceImpl implements PostService {
         return postList;
     }
 
+    @Override
+    public void deletePostListByBoardId(int boardId) {
+        // 함수형
+        posts.removeIf(post -> post.getBoardId() == boardId);
+    }
+
     private void validateAccountFields(String... fields) throws PostValidationException {
         for (String field : fields) {
             if (field == null || field.trim().isEmpty()) {
