@@ -34,17 +34,22 @@
 | 종료 | 프로그램 종료 | `종료` |
 
 ### 2단계 시점
-| 카테고리  | 기능         | 명령어 형식                     | 필수 파라미터          |
-|-----------|--------------|----------------------------------|------------------------|
-| `accounts`| 회원 가입    | `/accounts/signup`              | -                      |
-|           | 로그인       | `/accounts/signin`              | -                      |
-|           | 회원 정보 조회 | `/accounts/detail?accountId=1`  | `accountId`            |
-| `boards`  | 게시판 생성  | `/boards/add`                   | -                      |
-|           | 게시판 수정  | `/boards/edit?boardId=1`        | `boardId`              |
-|           | 게시판 목록  | `/boards/view?boardId=1`        | `boardId`              |
-| `posts`   | 게시글 작성  | `/posts/add?boardId=1`          | `boardId`              |
-|           | 게시글 조회  | `/posts/view?postId=3`          | `postId`               |
-|           | 게시글 수정  | `/posts/edit?postId=3`          | `postId`               |
+| 카테고리  | 기능       | 명령어 형식                         | 필수 파라미터     |
+|-----------|----------|--------------------------------|-------------|
+| `accounts`| 회원 가입    | `/accounts/signup`             | -           |
+|           | 로그인      | `/accounts/signin`             | -           |
+|           | 로그아웃     | `/accounts/signout`            | -           |
+|           | 회원 정보 조회 | `/accounts/detail?accountId=1` | `accountId` |
+|           | 회원 정보 수정 | `/accounts/edit?accountId=1`   | `accountId` |
+|           | 회원 탈퇴    | `/accounts/remove?accountId=1` | `accountId` |
+| `boards`  | 게시판 생성   | `/boards/add`                  | -           |
+|           | 게시판 수정   | `/boards/edit?boardId=1`       | `boardId`   |
+|           | 게시글 목록   | `/boards/view?boardName=게시판명`  | `boardName` |
+|           | 게시판 삭제   | `/boards/remove?boardId=1`     | `boardId`   |
+| `posts`   | 게시글 작성   | `/posts/add?boardId=1`         | `boardId`   |
+|           | 게시글 조회   | `/posts/view?postId=3`         | `postId`    |
+|           | 게시글 수정   | `/posts/edit?postId=3`         | `postId`    |
+|           | 게시글 삭제   | `/posts/remove?postId=3`       | `postId`    |
 
 ## 시작하기
 ### 실행 방법
