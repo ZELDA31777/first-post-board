@@ -9,7 +9,6 @@ import com.board.first.exception.post.PostNotFoundException;
 import com.board.first.exception.post.PostValidationException;
 import com.board.first.exception.post.PostsNotFoundException;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,9 +40,7 @@ public class PostServiceImpl implements PostService {
             throw new AccountValidationException("작성한 계정으로 로그인 해주세요.");
         }
         validateAccountFields(postName, postContent);
-        post.setPostTitle(postName);
-        post.setPostContent(postContent);
-        post.setUpdateTime(LocalDateTime.now());
+        post.updatePost(postName,postContent);
     }
 
     @Override

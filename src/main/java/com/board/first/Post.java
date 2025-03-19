@@ -27,6 +27,13 @@ public class Post {
         this.updateTime = this.createTime;
     }
 
+    // Enhance encapsulation
+    public void updatePost(String postTitle, String postContent) {
+        this.postTitle = postTitle;
+        this.postContent = postContent;
+        this.updateTime = LocalDateTime.now();
+    }
+
     public int getPostId() {
         return postId;
     }
@@ -43,16 +50,8 @@ public class Post {
         return postTitle;
     }
 
-    public void setPostTitle(String postTitle) {
-        this.postTitle = postTitle;
-    }
-
     public String getPostContent() {
         return postContent;
-    }
-
-    public void setPostContent(String postContent) {
-        this.postContent = postContent;
     }
 
     public String getAuthorName() {
