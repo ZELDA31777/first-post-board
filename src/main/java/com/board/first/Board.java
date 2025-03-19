@@ -10,10 +10,6 @@ public class Board {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
-    public Board() {
-
-    }
-
     public Board(int boardId, String boardName, Account account) {
         this.boardId = boardId;
         this.boardName = boardName;
@@ -21,6 +17,12 @@ public class Board {
         this.boardAuthor = account != null ? account.getUsername() : "비회원";
         this.createTime = LocalDateTime.now();
         this.updateTime = createTime;
+    }
+
+    // enhance encapsulation
+    public void updateBoard(String boardName) {
+        this.boardName = boardName;
+        this.updateTime = LocalDateTime.now();
     }
 
     public int getBoardId() {

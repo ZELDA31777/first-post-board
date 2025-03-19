@@ -5,9 +5,7 @@ import com.board.first.Board;
 import com.board.first.exception.account.AccountStatusException;
 import com.board.first.exception.board.BoardNotFoundException;
 import com.board.first.exception.board.BoardValidationException;
-import com.board.first.exception.post.PostValidationException;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,8 +43,7 @@ public class BoardServiceImpl implements BoardService {
             throw new AccountStatusException("작성한 계정으로 로그인 해주세요");
         }
         validateAccountFields(boardName);
-        board.setBoardName(boardName.trim());
-        board.setUpdateTime(LocalDateTime.now());
+        board.updateBoard(boardName);
     }
 
     @Override

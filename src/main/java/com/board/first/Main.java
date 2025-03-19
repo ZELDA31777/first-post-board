@@ -291,7 +291,7 @@ public class Main {
                 throw new InvalidBoardIdException(boardIdString, e);
             }
             System.out.print("게시판 제목: ");
-            String boardName = scanner.nextLine();
+            String boardName = scanner.nextLine().trim();
             if (boardName.isEmpty()) {
                 throw new BoardValidationException("게시판 제목을 입력해주세요.");
             }
