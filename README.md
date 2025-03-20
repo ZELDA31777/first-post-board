@@ -248,45 +248,6 @@ graph TD
 ```
 ```mermaid
 graph TD
-    subgraph posts : 게시글 관리
-        G[게시글 관리] --> G1{기능 선택}
-        G1 --> |add| G2[파라미터 검증 : boardId]
-        G2 --> G3[게시글 작성]
-        G1 --> |view| G4[파라미터 검증 : postId]
-        G4 --> G5[게시글 정보 조회]
-        G1 --> |edit| G6[파라미터 검증 : postId]
-        G6 --> G7[게시글 수정]
-        G1 --> |remove| G8[파라미터 검증 : postId]
-        G8 --> G9[게시글 삭제]
-        %% JCF(posts)와의 연결
-        G3 --> G10[(posts :\n게시글 정보의 리스트)]
-        G5 --> G10
-        G7 --> G10
-        G9 --> G10
-        G2 -.-> |게시판 존재 여부|J[[BoardValidationException]]
-        G4 -.-> |게시글ID 존재 여부|K[[PostValidationException]]
-        G6 -.-> |게시글ID 존재 여부|K
-        G8 -.-> |게시글ID 존재 여부|K
-    end
-    subgraph boards : 게시판 관리
-        F[게시판 관리] --> F1{기능 선택}
-        F1 --> |add| F2[게시판 생성]
-        F1 --> |edit| F3[파라미터 검증 : boardId]
-        F3 --> F4[게시판 수정]
-        F1 --> |view| F5[파라미터 검증 : boardName]
-        F5 --> F6[게시글 목록 출력]
-        F1 --> |remove| F7[파라미터 검증 : boardId]
-        F7 --> F8[게시판 삭제]
-        %% JCF(boards)와의 연결
-        F2 --> F10[(boards :\n게시판 정보의 리스트)]
-        F4 --> F10
-        F6 --> F10
-        F8 --> F10
-        F2 -.->|게시판 정보 미입력|I[[BoardValidationException]]
-        F3 -.->|게시판ID 존재 여부|I
-        F5 -.->|게시판 이름을 가지는 게시판ID 존재 여부|I
-        F7 -.->|게시판ID 존재 여부|I
-    end
     subgraph accounts : 회원 관리 
         E[회원관리] --> E1{기능 선택}
         E1 --> |signup| E2[회원 가입]
@@ -314,7 +275,51 @@ graph TD
         E9 -.-> |이미 삭제된 유저|H       
     end
 ```
-
+```mermaid
+graph TD
+subgraph boards : 게시판 관리
+F[게시판 관리] --> F1{기능 선택}
+F1 --> |add| F2[게시판 생성]
+F1 --> |edit| F3[파라미터 검증 : boardId]
+F3 --> F4[게시판 수정]
+F1 --> |view| F5[파라미터 검증 : boardName]
+F5 --> F6[게시글 목록 출력]
+F1 --> |remove| F7[파라미터 검증 : boardId]
+F7 --> F8[게시판 삭제]
+%% JCF(boards)와의 연결
+F2 --> F10[(boards :\n게시판 정보의 리스트)]
+F4 --> F10
+F6 --> F10
+F8 --> F10
+F2 -.->|게시판 정보 미입력|I[[BoardValidationException]]
+F3 -.->|게시판ID 존재 여부|I
+F5 -.->|게시판 이름을 가지는 게시판ID 존재 여부|I
+F7 -.->|게시판ID 존재 여부|I
+end
+```
+```mermaid
+graph TD
+    subgraph posts : 게시글 관리
+        G[게시글 관리] --> G1{기능 선택}
+        G1 --> |add| G2[파라미터 검증 : boardId]
+        G2 --> G3[게시글 작성]
+        G1 --> |view| G4[파라미터 검증 : postId]
+        G4 --> G5[게시글 정보 조회]
+        G1 --> |edit| G6[파라미터 검증 : postId]
+        G6 --> G7[게시글 수정]
+        G1 --> |remove| G8[파라미터 검증 : postId]
+        G8 --> G9[게시글 삭제]
+        %% JCF(posts)와의 연결
+        G3 --> G10[(posts :\n게시글 정보의 리스트)]
+        G5 --> G10
+        G7 --> G10
+        G9 --> G10
+        G2 -.-> |게시판ID 존재 여부|J[[BoardValidationException]]
+        G4 -.-> |게시글ID 존재 여부|K[[PostValidationException]]
+        G6 -.-> |게시글ID 존재 여부|K
+        G8 -.-> |게시글ID 존재 여부|K
+    end
+```
 ### 프로젝트 구조
 ```text
 단계 1 :
