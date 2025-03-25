@@ -13,6 +13,7 @@ import com.board.first.service.*;
 import java.util.*;
 
 public class Main {
+    // Application으로 리팩토링함에 따라 제거 예정인 인스턴스
     private static final Scanner scanner = new Scanner(System.in);
     // 다형성과 업캐스팅 -> 정말 기초적인 부분. 이걸 햇갈리다니 정말 창피하다.
     private static final AccountService accountService = new AccountServiceImpl();
@@ -20,37 +21,10 @@ public class Main {
     private static final BoardService boardService = new BoardServiceImpl(postService);
 
     public static void main(String[] args) {
-        Request request = new Request();
-        while (true) {
-            try {
-                System.out.print("a");
-                String input = scanner.nextLine().trim();
-
-                if (input.equals("종료")) {
-                    System.out.println("프로그램이 종료됩니다.");
-                    return;
-                }
-                request.updateUrl(input);
-                switch (request.getCategory()) {
-                    case "boards":
-                        boardsFunctions(request);
-                        break;
-                    case "posts":
-                        postsFunctions(request);
-                        break;
-                    case "accounts":
-                        accountsFunctions(request);
-                        break;
-                    default:
-                        throw new InvalidCommandException(request.getCategory());
-                }
-            } catch (BoardAppException e) {
-                System.out.println(e.getMessage());
-            }
-        }
+        Application app = new Application("zelda31777.com");
+        app.run();
     }
 
-    // TODO :
     private static void accountsFunctions(Request request) {
         String function = request.getFunction();
         try {
@@ -113,33 +87,33 @@ public class Main {
         }
     }
 
-    private static void boardsFunctions(Request request){
-        String function = request.getFunction();
-        Map<String, String> paramMap = request.getParamMap();
-        try {
-            switch (function) {
-                case "add":
-                    insertBoard(request);
-                    break;
-                case "edit":
-                    requireParam(request, "boardId");
-                    updateBoardByBoardId(request);
-                    break;
-                case "remove":
-                    requireParam(request, "boardId");
-                    deleteBoardByBoardId(request);
-                    break;
-                case "view":
-                    requireParam(request, "boardName");
-                    displayPostsByBoardName(request);
-                    break;
-                default:
-                    throw new InvalidCommandException(function);
-            }
-        } catch (BoardValidationException | AccountValidationException e) {
-            System.out.println(e.getMessage());
-        }
-    }
+//    private static void boardsFunctions(Request request){
+//        String function = request.getFunction();
+//        Map<String, String> paramMap = request.getParamMap();
+//        try {
+//            switch (function) {
+//                case "add":
+////                    insertBoard(request);
+////                    break;
+//                case "edit":
+////                    requireParam(request, "boardId");
+////                    updateBoardByBoardId(request);
+////                    break;
+//                case "remove":
+////                    requireParam(request, "boardId");
+////                    deleteBoardByBoardId(request);
+////                    break;
+//                case "view":
+////                    requireParam(request, "boardName");
+////                    displayPostsByBoardName(request);
+////                    break;
+//                default:
+//                    throw new InvalidCommandException(function);
+//            }
+//        } catch (BoardValidationException | AccountValidationException e) {
+//            System.out.println(e.getMessage());
+//        }
+//    }
 
     private static void requireParam(Request request, String paramName) {
         if (!request.getParamMap().containsKey(paramName)) {
@@ -251,12 +225,12 @@ public class Main {
 
     // 게시판 작성
     // TODO : 게시판 작성 서비스 분리 완료.
-    private static void insertBoard(Request request) {
-        System.out.print("게시판 제목: ");
-        String boardName = scanner.nextLine().trim();
-        boardService.createBoard(boardName, request.getCurrentAccount());
-        System.out.println("게시판이 작성되었습니다.");
-    }
+//    private static void insertBoard(Request request) {
+//        System.out.print("게시판 제목: ");
+//        String boardName = scanner.nextLine().trim();
+//        boardService.createBoard(boardName, request.getCurrentAccount());
+//        System.out.println("게시판이 작성되었습니다.");
+//    }
 
     // 게시판 수정 (boardId)
     // TODO : 게시판 수정 서비스 분리 완료.
