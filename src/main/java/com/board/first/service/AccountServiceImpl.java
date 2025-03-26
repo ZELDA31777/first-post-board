@@ -1,5 +1,6 @@
 package com.board.first.service;
 
+import com.board.first.Request;
 import com.board.first.data.Account;
 import com.board.first.exception.account.AccountNotFoundException;
 import com.board.first.exception.account.AccountStatusException;
@@ -23,10 +24,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account signInAccount(String userId, String password) throws AccountValidationException {
+    public Account signInAccount(Request request, String userId, String password) throws AccountValidationException {
         validateAccountFields(userId, password);
         for (Account account : accounts) {
             if (account.getUserId().equals(userId) && account.getPassword().equals(password)) {
+                request.signIn(userId);
                 return account;
             }
         }
@@ -34,12 +36,22 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void logoutAccount(Account account) {
-        if (account == null) {
+    public void logoutAccount(Request request) {
+        if (!request.isLogin()) {
             throw new AccountStatusException("이미 로그아웃 상태입니다.");
         }
-        System.out.printf("%s의 로그아웃에 성공하였습니다!\n", account.getUsername());
-        account = null;
+        System.out.printf("%s의 로그아웃에 성공하였습니다!\n", request.getLoginUserId());
+        request.signOut();
+    }
+
+    @Override
+    public Account getAccountByUserId(String userId) {
+        for (Account account : accounts) {
+            if (account.getUserId().equals(userId)) {
+                return account;
+            }
+        }
+        throw new AccountNotFoundException(userId);
     }
 
     @Override
@@ -61,11 +73,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void updateAccount(int accountId, String password, String email, Account account) throws AccountNotFoundException {
+    public void updateAccount(int accountId, String password, String email, Request request) throws AccountNotFoundException {
         validateAccountFields(password, email);
         validateEmailFormat(email);
         Account updatedAccount = getAccountByAccountId(accountId);
-        if(!updatedAccount.equals(account)){
+        if(!updatedAccount.getUserId().equals(request.getLoginUserId())){
             throw new AccountStatusException("로그인 중인 계정만 계정 정보를 수정할 수 있습니다.");
         }
         updatedAccount.setPassword(password);

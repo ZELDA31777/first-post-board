@@ -9,6 +9,8 @@ import java.util.Scanner;
 
 public class Container {
     public static final Scanner sc;
+    public static Session session;
+
     private static final AccountService accountService;
     private static final PostService postService;
     private static final BoardService boardService;
@@ -19,13 +21,15 @@ public class Container {
 
     static {
         sc = new Scanner(System.in);
+        session = new Session();
+
         accountService = new AccountServiceImpl();
         postService = new PostServiceImpl();
         boardService = new BoardServiceImpl(postService);
 
         accountController = new AccountController(sc, accountService);
-        boardController = new BoardController(sc, boardService, postService);
-        postController = new PostController(sc, postService, boardService);
+        boardController = new BoardController(sc, boardService, postService, accountService);
+        postController = new PostController(sc, postService, boardService, accountService);
     }
 
 

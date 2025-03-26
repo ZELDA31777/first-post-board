@@ -41,23 +41,25 @@ public class AccountController implements Controller {
                 break;
             case "signin":
                 try {
-                    if (request.getCurrentAccount() != null) {
+                    if (request.isLogin()) {
                         throw new AccountStatusException("다른 아이디로 로그인 시에는 로그아웃 후에 로그인 해주세요.");
                     }
                     System.out.print("계정: ");
                     String userId = sc.nextLine().trim();
                     System.out.print("비밀번호: ");
                     String password = sc.nextLine().trim();
-                    // 내부 로직을 서비스로 분리
-                    request.setCurrentAccount(accountService.signInAccount(userId, password));
-                    System.out.printf("%s의 로그인에 성공하였습니다!\n", request.getCurrentAccount().getUsername());
+                    // TODO : Session
+                    Account result = accountService.signInAccount(request, userId, password);
+                    System.out.printf("%s의 로그인에 성공하였습니다!\n", result.getUsername());
                 } catch (AccountValidationException e) {
                     System.out.println(e.getMessage());
                 }
                 break;
             case "signout":
                 try {
-                    accountService.logoutAccount(request.getCurrentAccount());
+
+                    accountService.logoutAccount(request);
+
                 } catch (AccountValidationException e) {
                     System.out.println(e.getMessage());
                 }
@@ -95,7 +97,7 @@ public class AccountController implements Controller {
                     String password = sc.nextLine().trim();
                     System.out.print("이메일: ");
                     String email = sc.nextLine().trim();
-                    accountService.updateAccount(accountId, password, email, request.getCurrentAccount());
+                    accountService.updateAccount(accountId, password, email, request);
                 } catch (AccountValidationException e) {
                     System.out.println(e.getMessage());
                 }
@@ -110,8 +112,8 @@ public class AccountController implements Controller {
                     } catch (NumberFormatException e) {
                         throw new InvalidAccountIdException(accountIdString);
                     }
-                    if (request.getCurrentAccount() != null) {
-                        accountService.logoutAccount(request.getCurrentAccount());
+                    if (request.isLogin()) {
+                        accountService.logoutAccount(request);
                     }
                     String username = accountService.deleteAccount(accountId);
                     System.out.printf("%s의 회원 탈퇴에 성공하였습니다!\n", username);

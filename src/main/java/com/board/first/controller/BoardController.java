@@ -1,11 +1,13 @@
 package com.board.first.controller;
 
+import com.board.first.data.Account;
 import com.board.first.data.Post;
 import com.board.first.Request;
 import com.board.first.exception.account.AccountValidationException;
 import com.board.first.exception.board.BoardValidationException;
 import com.board.first.exception.board.InvalidBoardIdException;
 import com.board.first.exception.command.CommandValidationException;
+import com.board.first.service.AccountService;
 import com.board.first.service.BoardService;
 import com.board.first.service.PostService;
 
@@ -16,10 +18,12 @@ public class BoardController implements Controller {
     private final Scanner sc;
     private final BoardService boardService;
     private final PostService postService;
+    private final AccountService accountService;
 
-    public BoardController(Scanner sc, BoardService boardService, PostService postService) {
+    public BoardController(Scanner sc, BoardService boardService, PostService postService, AccountService accountService) {
         this.boardService = boardService;
         this.postService = postService;
+        this.accountService = accountService;
         this.sc = sc;
     }
 
@@ -42,7 +46,8 @@ public class BoardController implements Controller {
                     if (boardName.isEmpty()) {
                         throw new BoardValidationException("게시판 제목을 입력해주세요.");
                     }
-                    boardService.updateBoard(boardId, boardName, request.getCurrentAccount());
+                    Account account = accountService.getAccountByUserId(request.getLoginUserId());
+                    boardService.updateBoard(boardId, boardName, account);
                     System.out.printf("%d번 게시판이 성공적으로 수정되었습니다!\n", boardId);
                 } catch (BoardValidationException e) {
                     System.out.println(e.getMessage());
@@ -58,7 +63,8 @@ public class BoardController implements Controller {
                     } catch (NumberFormatException e){
                         throw new InvalidBoardIdException(boardIdString, e);
                     }
-                    boardService.deleteBoard(boardId, request.getCurrentAccount());
+                    Account account = accountService.getAccountByUserId(request.getLoginUserId());
+                    boardService.deleteBoard(boardId, account);
                     System.out.printf("%d번 게시판이 성공적으로 삭제되었습니다!\n", boardId);
                 } catch (BoardValidationException | AccountValidationException e) {
                     System.out.println(e.getMessage());
@@ -78,7 +84,8 @@ public class BoardController implements Controller {
             case "add":
                 System.out.print("게시판 제목: ");
                 String boardName = sc.nextLine().trim();
-                boardService.createBoard(boardName, request.getCurrentAccount());
+                Account account = accountService.getAccountByUserId(request.getLoginUserId());
+                boardService.createBoard(boardName, account);
                 System.out.println("게시판이 작성되었습니다.");
                 break;
         }

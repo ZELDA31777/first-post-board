@@ -3,15 +3,16 @@ package com.board.first;
 import com.board.first.data.Account;
 import com.board.first.exception.command.CommandValidationException;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class Request {
     private String category;
     private String function;
     private Map<String, String> paramMap;
-    private Account currentAccount = null;
-
+    private final String AUTH_STATUS_KEY_NAME = "loginUser";
     public Request() {
+        this.paramMap = new HashMap<>();
     }
 
     public void updateUrl(String input) {
@@ -58,11 +59,40 @@ public class Request {
         return paramMap;
     }
 
-    public Account getCurrentAccount() {
-        return currentAccount;
+    public Object getSessionAttribute(String key) {
+        Session session = Container.session;
+        return session.getAttribute(key);
     }
 
-    public void setCurrentAccount(Account currentAccount) {
-        this.currentAccount = currentAccount;
+    public void setSessionAttribute(String key, Object value) {
+        Session session = Container.session;
+        session.setAttributes(key, value);
     }
+
+    public boolean hasSessionAttribute(String key) {
+        Session session = Container.session;
+        return session.hasAttribute(key);
+    }
+
+    private void removeSessionAttribute(String key) {
+        Session session = Container.session;
+        session.removeAttribute(key);
+    }
+
+    public void signIn(String username) {
+        setSessionAttribute(AUTH_STATUS_KEY_NAME, username);
+    }
+
+    public void signOut() {
+        removeSessionAttribute(AUTH_STATUS_KEY_NAME);
+    }
+
+    public String getLoginUserId() {
+        return (String) getSessionAttribute(AUTH_STATUS_KEY_NAME);
+    }
+
+    public boolean isLogin() {
+        return hasSessionAttribute(AUTH_STATUS_KEY_NAME);
+    }
+
 }
