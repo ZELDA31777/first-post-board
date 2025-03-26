@@ -1,6 +1,6 @@
 package com.board.first.service;
 
-import com.board.first.Account;
+import com.board.first.data.Account;
 import com.board.first.exception.account.AccountNotFoundException;
 import com.board.first.exception.account.AccountStatusException;
 import com.board.first.exception.account.AccountValidationException;

@@ -1,7 +1,7 @@
 package com.board.first.service;
 
-import com.board.first.Account;
-import com.board.first.Board;
+import com.board.first.data.Account;
+import com.board.first.data.Board;
 import com.board.first.exception.account.AccountStatusException;
 import com.board.first.exception.board.BoardNotFoundException;
 import com.board.first.exception.board.BoardValidationException;

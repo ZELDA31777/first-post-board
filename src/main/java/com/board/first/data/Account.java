@@ -1,4 +1,4 @@
-package com.board.first;
+package com.board.first.data;
 
 import java.time.LocalDateTime;
 
@@ -26,10 +26,6 @@ public class Account {
 
     public int getAccountId() {
         return accountId;
-    }
-
-    public void setAccountId(int accountId) {
-        this.accountId = accountId;
     }
 
     public String getUserId() {
@@ -66,14 +62,6 @@ public class Account {
 
     public LocalDateTime getCreateTime() {
         return createTime;
-    }
-
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
-    }
-
-    public LocalDateTime getUpdateTime() {
-        return updateTime;
     }
 
     public void setUpdateTime(LocalDateTime updateTime) {

@@ -1,4 +1,4 @@
-package com.board.first;
+package com.board.first.data;
 
 import java.time.LocalDateTime;
 
