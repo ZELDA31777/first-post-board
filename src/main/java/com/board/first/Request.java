@@ -1,8 +1,8 @@
 package com.board.first;
 
+import com.board.first.data.Account;
 import com.board.first.exception.command.CommandValidationException;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class Request {

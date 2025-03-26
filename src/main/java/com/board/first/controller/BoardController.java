@@ -1,6 +1,6 @@
 package com.board.first.controller;
 
-import com.board.first.Post;
+import com.board.first.data.Post;
 import com.board.first.Request;
 import com.board.first.exception.account.AccountValidationException;
 import com.board.first.exception.board.BoardValidationException;

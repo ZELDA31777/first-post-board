@@ -23,9 +23,9 @@ public class Container {
         postService = new PostServiceImpl();
         boardService = new BoardServiceImpl(postService);
 
-        accountController = new AccountController(accountService);
+        accountController = new AccountController(sc, accountService);
         boardController = new BoardController(sc, boardService, postService);
-        postController = new PostController(postService, boardService);
+        postController = new PostController(sc, postService, boardService);
     }
 
 
