@@ -1,12 +1,11 @@
 package com.board.first.controller;
 
+import com.board.first.RequestUtils;
 import com.board.first.data.Account;
+import com.board.first.data.ErrorCode;
 import com.board.first.data.Post;
 import com.board.first.Request;
-import com.board.first.exception.account.AccountValidationException;
-import com.board.first.exception.board.BoardValidationException;
-import com.board.first.exception.board.InvalidBoardIdException;
-import com.board.first.exception.command.CommandValidationException;
+import com.board.first.exception.BoardAppException;
 import com.board.first.service.AccountService;
 import com.board.first.service.BoardService;
 import com.board.first.service.PostService;
@@ -31,69 +30,62 @@ public class BoardController implements Controller {
     public void requestHandler(Request request) {
         switch (request.getFunction()){
             case "edit":
-                requireParam(request, "boardId");
-                try {
-                    String boardIdString = request.getParamMap().get("boardId");
-                    int boardId;
-                    try {
-                        boardId = Integer.parseInt(boardIdString);
-                    } catch (NumberFormatException e){
-                        // RuntimeException의 하위 예외를 포함하고 있기 때문에, cause를 포함.
-                        throw new InvalidBoardIdException(boardIdString, e);
-                    }
-                    System.out.print("게시판 제목: ");
-                    String boardName = sc.nextLine().trim();
-                    if (boardName.isEmpty()) {
-                        throw new BoardValidationException("게시판 제목을 입력해주세요.");
-                    }
-                    Account account = accountService.getAccountByUserId(request.getLoginUserId());
-                    boardService.updateBoard(boardId, boardName, account);
-                    System.out.printf("%d번 게시판이 성공적으로 수정되었습니다!\n", boardId);
-                } catch (BoardValidationException e) {
-                    System.out.println(e.getMessage());
-                }
+                boardEdit(request);
                 break;
             case "remove":
-                requireParam(request, "boardId");
-                try {
-                    String boardIdString = request.getParamMap().get("boardId");
-                    int boardId;
-                    try {
-                        boardId = Integer.parseInt(boardIdString);
-                    } catch (NumberFormatException e){
-                        throw new InvalidBoardIdException(boardIdString, e);
-                    }
-                    Account account = accountService.getAccountByUserId(request.getLoginUserId());
-                    boardService.deleteBoard(boardId, account);
-                    System.out.printf("%d번 게시판이 성공적으로 삭제되었습니다!\n", boardId);
-                } catch (BoardValidationException | AccountValidationException e) {
-                    System.out.println(e.getMessage());
-                }
+                boardRemove(request);
                 break;
             case "view":
-                requireParam(request, "boardName");
-                try {
-                    String boardName = request.getParamMap().get("boardName");
-                    int boardId = boardService.getBoardIdByBoardName(boardName);
-                    System.out.println("글 번호\t/\t글 제목\t/\t작성일");
-                    List<Post> posts = postService.getPostListByBoardId(boardId);
-                } catch (BoardValidationException e){
-                    System.out.println(e.getMessage());
-                }
+                boardView(request);
                 break;
             case "add":
-                System.out.print("게시판 제목: ");
-                String boardName = sc.nextLine().trim();
-                Account account = accountService.getAccountByUserId(request.getLoginUserId());
-                boardService.createBoard(boardName, account);
-                System.out.println("게시판이 작성되었습니다.");
+                boardAdd(request);
                 break;
+            default:
+                throw new BoardAppException(ErrorCode.COMMAND_NOT_FOUND_FUNCTION);
         }
+    }
+
+    private void boardAdd(Request request) {
+        String boardName = RequestUtils.parameterForInput(sc, "게시판 제목");
+        Account account = accountService.getAccountByUserId(request.getLoginUserId());
+        boardService.createBoard(boardName, account);
+        System.out.println("게시판이 작성되었습니다.");
+    }
+
+    private void boardView(Request request) {
+
+        requireParam(request, "boardName");
+        String boardName = request.getParamMap().get("boardName");
+        int boardId = boardService.getBoardIdByBoardName(boardName);
+        System.out.println("글 번호\t/\t글 제목\t/\t작성일");
+        List<Post> posts = postService.getPostListByBoardId(boardId);
+        for (Post post : posts) {
+            post.toString();
+        }
+    }
+
+    private void boardRemove(Request request) {
+        int boardId = RequestUtils.getIntParameterFromRequest(request, "boardId");
+        Account account = accountService.getAccountByUserId(request.getLoginUserId());
+        boardService.deleteBoard(boardId, account);
+        System.out.printf("%d번 게시판이 성공적으로 삭제되었습니다!\n", boardId);
+    }
+
+    private void boardEdit(Request request) {
+        int boardId = RequestUtils.getIntParameterFromRequest(request, "boardId");
+        String boardName = RequestUtils.parameterForInput(sc, "게시판 제목");
+        if (boardName.isEmpty()) {
+            throw new BoardAppException(ErrorCode.POST_VALIDATION_FAILED);
+        }
+        Account account = accountService.getAccountByUserId(request.getLoginUserId());
+        boardService.updateBoard(boardId, boardName, account);
+        System.out.printf("%d번 게시판이 성공적으로 수정되었습니다!\n", boardId);
     }
 
     private static void requireParam(Request request, String paramName) {
         if (!request.getParamMap().containsKey(paramName)) {
-            throw new CommandValidationException(paramName + " 파라미터를 입력해주세요.");
+            throw new BoardAppException(ErrorCode.INVALID_PARAMETER, paramName + " 파라미터를 입력해주세요.");
         }
     }
 }

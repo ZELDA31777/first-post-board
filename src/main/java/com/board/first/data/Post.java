@@ -76,10 +76,7 @@ public class Post {
                 "postId=" + postId +
                 ", postTitle='" + postTitle + '\'' +
                 ", postContent='" + postContent + '\'' +
-                ", boardId='" + boardId + '\'' +
-                ", postAuthor='" + account.getUsername() + '\'' +
                 ", createTime=" + createTime +
-                ", updateTime=" + updateTime +
                 '}';
     }
 }

@@ -1,6 +1,8 @@
 package com.board.first.data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Account {
     private int accountId;
@@ -8,18 +10,20 @@ public class Account {
     private String password;
     private String username;
     private String email;
+    private AuthType authType;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
     public Account() {
     }
 
-    public Account(int accountId, String userId, String password, String username, String email) {
+    public Account(int accountId, String userId, String password, String username, String email, AuthType authType) {
         this.accountId = accountId;
         this.userId = userId;
         this.password = password;
         this.username = username;
         this.email = email;
+        this.authType = authType;
         this.createTime = LocalDateTime.now();
         this.updateTime = createTime;
     }
@@ -54,6 +58,10 @@ public class Account {
 
     public String getEmail() {
         return email;
+    }
+
+    public AuthType getAuthType() {
+        return authType;
     }
 
     public void setEmail(String email) {

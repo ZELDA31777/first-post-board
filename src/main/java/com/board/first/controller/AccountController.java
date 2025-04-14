@@ -1,11 +1,10 @@
 package com.board.first.controller;
 
+import com.board.first.RequestUtils;
 import com.board.first.data.Account;
 import com.board.first.Request;
-import com.board.first.exception.account.AccountStatusException;
-import com.board.first.exception.account.AccountValidationException;
-import com.board.first.exception.account.InvalidAccountIdException;
-import com.board.first.exception.command.CommandValidationException;
+import com.board.first.data.ErrorCode;
+import com.board.first.exception.BoardAppException;
 import com.board.first.service.AccountService;
 
 import java.util.Scanner;
@@ -23,110 +22,75 @@ public class AccountController implements Controller {
     public void requestHandler(Request request) {
         switch(request.getFunction()) {
             case "signup":
-                try {
-                    System.out.print("계정: ");
-                    String userId = sc.nextLine().trim();
-                    System.out.print("비밀번호: ");
-                    String password = sc.nextLine().trim();
-                    System.out.print("닉네임: ");
-                    String username = sc.nextLine().trim();
-                    System.out.print("이메일: ");
-                    String email = sc.nextLine().trim();
-                    // 내부 로직을 서비스로 분리
-                    accountService.signUpAccount(userId, password, username, email);
-                    System.out.println("회원 가입이 성공적으로 완료되었습니다.");
-                } catch (AccountValidationException e) {
-                    System.out.println(e.getMessage());
-                }
+                accountSignUp();
                 break;
             case "signin":
-                try {
-                    if (request.isLogin()) {
-                        throw new AccountStatusException("다른 아이디로 로그인 시에는 로그아웃 후에 로그인 해주세요.");
-                    }
-                    System.out.print("계정: ");
-                    String userId = sc.nextLine().trim();
-                    System.out.print("비밀번호: ");
-                    String password = sc.nextLine().trim();
-                    // TODO : Session
-                    Account result = accountService.signInAccount(request, userId, password);
-                    System.out.printf("%s의 로그인에 성공하였습니다!\n", result.getUsername());
-                } catch (AccountValidationException e) {
-                    System.out.println(e.getMessage());
-                }
+                accountSignIn(request);
                 break;
             case "signout":
-                try {
-
-                    accountService.logoutAccount(request);
-
-                } catch (AccountValidationException e) {
-                    System.out.println(e.getMessage());
-                }
+                accountSignOut(request);
                 break;
             case "detail":
-                requireParam(request, "accountId");
-                try {
-                    String accountIdString = request.getParamMap().get("accountId");
-                    int accountId;
-                    try {
-                        accountId = Integer.parseInt(accountIdString);
-                    } catch (NumberFormatException e) {
-                        throw new InvalidAccountIdException(accountIdString);
-                    }
-                    Account account = accountService.getAccountByAccountId(accountId);
-                    System.out.printf("%d번 회원\n", accountId);
-                    System.out.println("계정 : " + account.getUsername());
-                    System.out.println("이메일 : " + account.getEmail());
-                    System.out.println("가입일 : " + account.getCreateTime());
-                } catch (AccountValidationException e) {
-                    System.out.println(e.getMessage());
-                }
+                accountDetail(request);
                 break;
             case "edit":
-                requireParam(request, "accountId");
-                try {
-                    String accountIdString = request.getParamMap().get("accountId");
-                    int accountId;
-                    try {
-                        accountId = Integer.parseInt(accountIdString);
-                    } catch (NumberFormatException e) {
-                        throw new InvalidAccountIdException(accountIdString);
-                    }
-                    System.out.print("비밀번호: ");
-                    String password = sc.nextLine().trim();
-                    System.out.print("이메일: ");
-                    String email = sc.nextLine().trim();
-                    accountService.updateAccount(accountId, password, email, request);
-                } catch (AccountValidationException e) {
-                    System.out.println(e.getMessage());
-                }
+                accountEdit(request);
                 break;
             case "remove":
-                requireParam(request, "accountId");
-                try {
-                    String accountIdString = request.getParamMap().get("accountId");
-                    int accountId;
-                    try {
-                        accountId = Integer.parseInt(accountIdString);
-                    } catch (NumberFormatException e) {
-                        throw new InvalidAccountIdException(accountIdString);
-                    }
-                    if (request.isLogin()) {
-                        accountService.logoutAccount(request);
-                    }
-                    String username = accountService.deleteAccount(accountId);
-                    System.out.printf("%s의 회원 탈퇴에 성공하였습니다!\n", username);
-                } catch (AccountValidationException e) {
-                    System.out.println(e.getMessage());
-                }
+                accountRemove(request);
                 break;
+            default:
+                throw new BoardAppException(ErrorCode.COMMAND_NOT_FOUND_FUNCTION);
         }
     }
 
-    private static void requireParam(Request request, String paramName) {
-        if (!request.getParamMap().containsKey(paramName)) {
-            throw new CommandValidationException(paramName + " 파라미터를 입력해주세요.");
+    private void accountDetail(Request request) {
+        int accountId = RequestUtils.getIntParameterFromRequest(request, "accountId");
+        Account account = accountService.getAccountByAccountId(accountId);
+        System.out.printf("%d번 회원\n", accountId);
+        System.out.println("계정 : " + account.getUsername());
+        System.out.println("이메일 : " + account.getEmail());
+        System.out.println("가입일 : " + account.getCreateTime());
+    }
+
+    private void accountEdit(Request request) {
+        int accountId = RequestUtils.getIntParameterFromRequest(request, "accountId");
+        String password = RequestUtils.parameterForInput(sc, "비밀번호");
+        String email = RequestUtils.parameterForInput(sc, "이메일");
+        accountService.updateAccount(accountId, password, email, request);
+    }
+
+
+    private void accountRemove(Request request) {
+        int accountId = RequestUtils.getIntParameterFromRequest(request, "accountId");
+        if (request.isLogin()) {
+            accountSignOut(request);
         }
+        String username = accountService.deleteAccount(accountId);
+        System.out.printf("%s의 회원 탈퇴에 성공하였습니다!\n", username);
+    }
+
+    private void accountSignOut(Request request) {
+        accountService.logoutAccount(request);
+    }
+
+    private void accountSignIn(Request request) {
+        if (request.isLogin()) {
+            throw new BoardAppException(ErrorCode.ACCOUNT_NEED_LOGOUT);
+        }
+        String userId = RequestUtils.parameterForInput(sc,"계정");
+        String password = RequestUtils.parameterForInput(sc, "비밀번호");
+        // TODO : Session
+        Account result = accountService.signInAccount(request, userId, password);
+        System.out.printf("%s의 로그인에 성공하였습니다!\n", result.getUsername());
+    }
+
+    private void accountSignUp() {
+        String userId = RequestUtils.parameterForInput(sc,"계정");
+        String password = RequestUtils.parameterForInput(sc,"비밀번호");
+        String username = RequestUtils.parameterForInput(sc,"닉네임");
+        String email = RequestUtils.parameterForInput(sc,"이메일");
+        accountService.signUpAccount(userId, password, username, email);
+        System.out.println("회원 가입이 성공적으로 완료되었습니다.");
     }
 }

@@ -1,20 +1,22 @@
 package com.board.first.exception;
 
-public class BoardAppException extends RuntimeException{
+import com.board.first.data.ErrorCode;
 
-    public BoardAppException() {
-        super();
+public class BoardAppException extends RuntimeException {
+    private final ErrorCode errorCode;
+
+    // ErrorCode에 할당한 ErrorMessage로 대체
+    public BoardAppException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
     }
 
-    public BoardAppException(String message) {
-        super(message);
+    public BoardAppException(ErrorCode errorCode, String customMessage) {
+        super(customMessage);
+        this.errorCode = errorCode;
     }
 
-    public BoardAppException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public BoardAppException(Throwable cause){
-        super(cause);
+    public ErrorCode getErrorCode() {
+        return errorCode;
     }
 }

@@ -1,13 +1,9 @@
 package com.board.first.service;
 
 import com.board.first.data.Account;
+import com.board.first.data.ErrorCode;
 import com.board.first.data.Post;
-import com.board.first.exception.account.AccountStatusException;
-import com.board.first.exception.account.AccountValidationException;
-import com.board.first.exception.board.BoardNotFoundException;
-import com.board.first.exception.post.PostNotFoundException;
-import com.board.first.exception.post.PostValidationException;
-import com.board.first.exception.post.PostsNotFoundException;
+import com.board.first.exception.BoardAppException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,43 +13,43 @@ public class PostServiceImpl implements PostService {
     private static int postId = 1;
 
     @Override
-    public void createPost(int boardId, String postName, Account account, String postContent) throws BoardNotFoundException {
+    public void createPost(int boardId, String postName, Account account, String postContent) {
         validateAccountFields(postName, postContent);
         Post post = new Post(postId++, boardId, account, postName, postContent);
         posts.add(post);
     }
 
     @Override
-    public Post getPostByPostId(int postId) throws PostNotFoundException {
+    public Post getPostByPostId(int postId) {
         for (Post post : posts){
             if (post.getPostId() == postId) {
                 return post;
             }
         }
-        throw new PostNotFoundException(postId);
+        throw new BoardAppException(ErrorCode.POST_NOT_FOUND);
     }
 
     @Override
-    public void updatePost(int postId, Account account, String postName, String postContent) throws PostNotFoundException , AccountStatusException {
+    public void updatePost(int postId, Account account, String postName, String postContent) {
         Post post = getPostByPostId(postId);
         if (account == null || !post.getAccount().equals(account)) {
-            throw new AccountValidationException("작성한 계정으로 로그인 해주세요.");
+            throw new BoardAppException(ErrorCode.ACCOUNT_UNAUTHORIZED);
         }
         validateAccountFields(postName, postContent);
         post.updatePost(postName,postContent);
     }
 
     @Override
-    public void deletePostByPostId(int postId, Account account) throws PostNotFoundException, AccountStatusException {
+    public void deletePostByPostId(int postId, Account account) {
         Post post = getPostByPostId(postId);
         if (account == null || !post.getAccount().equals(account)) {
-            throw new AccountStatusException("작성한 계정으로 로그인 해주세요.");
+            throw new BoardAppException(ErrorCode.ACCOUNT_UNAUTHORIZED);
         }
         posts.remove(post);
     }
 
     @Override
-    public List<Post> getPostListByBoardId(int boardId) throws PostNotFoundException {
+    public List<Post> getPostListByBoardId(int boardId) {
         List<Post> postList = new ArrayList<>();
         for (Post post : posts) {
             if (post.getBoardId() == boardId) {
@@ -62,7 +58,7 @@ public class PostServiceImpl implements PostService {
             }
         }
         if(postList.isEmpty()){
-            throw new PostsNotFoundException(boardId);
+            throw new BoardAppException(ErrorCode.BOARD_NOT_FOUND);
         }
         return postList;
     }
@@ -73,10 +69,10 @@ public class PostServiceImpl implements PostService {
         posts.removeIf(post -> post.getBoardId() == boardId);
     }
 
-    private void validateAccountFields(String... fields) throws PostValidationException {
+    private void validateAccountFields(String... fields) {
         for (String field : fields) {
             if (field == null || field.trim().isEmpty()) {
-                throw new PostValidationException("계정 정보를 모두 입력해주세요.");
+                throw new BoardAppException(ErrorCode.POST_VALIDATION_FAILED);
             }
         }
     }

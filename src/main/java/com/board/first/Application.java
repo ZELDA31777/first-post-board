@@ -1,8 +1,8 @@
 package com.board.first;
 
-import com.board.first.controller.BoardController;
 import com.board.first.controller.Controller;
-import com.board.first.exception.command.InvalidCommandException;
+import com.board.first.data.ErrorCode;
+import com.board.first.exception.BoardAppException;
 
 import java.util.Scanner;
 
@@ -22,31 +22,32 @@ public class Application {
             String line = "https://" + domain;
             System.out.print(line);
             String command = sc.nextLine().trim();
-            if (command.equals(".종료")) {
+            if (command.equals(".exit")) {
                 programStatus = false;
                 System.out.println("프로그램을 종료합니다.");
                 continue;
             }
             Request request = new Request();
             request.updateUrl(command);
-            Controller controller = null;
-            switch (request.getCategory()) {
-                case "boards":
-                    controller =  Container.boardController;
-                    break;
-                case "posts":
-                    controller = Container.postController;
-                    break;
-                case "accounts":
-                    controller = Container.accountController;
-                    break;
-                default:
-                    throw new InvalidCommandException(request.getCategory());
-            }
-            if (controller != null) {
+
+            try {
+                Controller controller = null;
+                switch (request.getCategory()) {
+                    case "boards":
+                        controller = Container.boardController;
+                        break;
+                    case "posts":
+                        controller = Container.postController;
+                        break;
+                    case "accounts":
+                        controller = Container.accountController;
+                        break;
+                    default:
+                        throw new BoardAppException(ErrorCode.INVALID_PARAMETER);
+                }
                 controller.requestHandler(request);
-            } else {
-                throw new InvalidCommandException(command);
+            } catch (RuntimeException e) {
+                System.out.println(e.getMessage());
             }
         }
     }
